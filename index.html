@@ -3,487 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OZ Rank Tracker v2.0 - Theo Dõi Từ Khóa & Chuyển Đổi</title>
+    <title>OZ Rank Tracker v2.1 - Theo Doi Tu Khoa & Chuyen Doi</title>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f0f2f5;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; }
-
-        /* Navbar */
-        .navbar {
-            background: linear-gradient(90deg, #1a3a8c 0%, #c0392b 100%);
-            color: white;
-            padding: 20px 25px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            box-shadow: 0 4px 16px rgba(26,58,140,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
+        .navbar { background: linear-gradient(90deg, #1a3a8c 0%, #c0392b 100%); color: white; padding: 20px 25px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(26,58,140,0.2); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
         .navbar-left h1 { font-size: 24px; font-weight: 700; }
         .navbar-left p { font-size: 13px; opacity: 0.85; margin-top: 3px; }
         .navbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
-
-        /* Buttons */
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.4px; }
         .btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-white { background: white; color: #1a3a8c; }
         .btn-primary { background: linear-gradient(90deg,#1a3a8c,#c0392b); color: white; }
-        .btn-success { background: #27ae60; color: white; }
         .btn-warning { background: #f39c12; color: white; }
         .btn-danger { background: #e74c3c; color: white; font-size: 11px; padding: 5px 10px; }
+        .btn-check { background: #8e44ad; color: white; font-size: 11px; padding: 5px 10px; }
         .btn-sm { font-size: 11px; padding: 5px 10px; }
-
-        /* Metrics */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        .metric-card {
-            background: white;
-            padding: 18px 16px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            text-align: center;
-            border-top: 3px solid transparent;
-        }
-        .metric-card.blue { border-top-color: #1a3a8c; }
-        .metric-card.green { border-top-color: #27ae60; }
-        .metric-card.orange { border-top-color: #f39c12; }
-        .metric-card.red { border-top-color: #c0392b; }
-        .metric-card.purple { border-top-color: #8e44ad; }
-        .metric-card.teal { border-top-color: #16a085; }
-        .metric-card h3 {
-            color: #7f8c8d;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            letter-spacing: 0.6px;
-        }
-        .metric-value {
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            color: #2c3e50;
-        }
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .metric-card { background: white; padding: 18px 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; border-top: 3px solid transparent; }
+        .metric-card.blue { border-top-color: #1a3a8c; } .metric-card.green { border-top-color: #27ae60; }
+        .metric-card.orange { border-top-color: #f39c12; } .metric-card.red { border-top-color: #c0392b; }
+        .metric-card.purple { border-top-color: #8e44ad; } .metric-card.teal { border-top-color: #16a085; }
+        .metric-card h3 { color: #7f8c8d; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.6px; }
+        .metric-value { font-size: 32px; font-weight: 800; line-height: 1; color: #2c3e50; }
         .metric-sub { font-size: 11px; color: #95a5a6; margin-top: 4px; }
-
-        /* Tabs */
-        .tabs {
-            display: flex;
-            gap: 4px;
-            background: white;
-            padding: 8px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            flex-wrap: wrap;
-        }
-        .tab {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: transparent;
-            color: #7f8c8d;
-        }
+        .tabs { display: flex; gap: 4px; background: white; padding: 8px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); flex-wrap: wrap; }
+        .tab { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: #7f8c8d; }
         .tab.active { background: linear-gradient(90deg,#1a3a8c,#c0392b); color: white; }
         .tab:hover:not(.active) { background: #f0f2f5; color: #2c3e50; }
-
-        /* Table Section */
-        .table-section {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-        .table-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .table-section { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; overflow: hidden; }
+        .table-header { padding: 18px 20px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
         .table-header h2 { font-size: 16px; color: #2c3e50; font-weight: 700; }
         .table-wrap { overflow-x: auto; }
-
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        table { width: 100%; border-collapse: collapse; min-width: 1050px; }
         table thead { background: #f8f9fa; }
-        table th {
-            padding: 11px 12px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 700;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
-            border-bottom: 2px solid #e8e8e8;
-        }
-        table td {
-            padding: 13px 12px;
-            border-bottom: 1px solid #f4f4f4;
-            font-size: 13px;
-            vertical-align: middle;
-        }
+        table th { padding: 11px 12px; text-align: left; font-size: 11px; font-weight: 700; color: #7f8c8d; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; border-bottom: 2px solid #e8e8e8; }
+        table td { padding: 13px 12px; border-bottom: 1px solid #f4f4f4; font-size: 13px; vertical-align: middle; }
         table tbody tr:hover { background: #fafbfc; }
         .keyword-name { font-weight: 600; color: #2c3e50; }
-        .keyword-url a {
-            color: #1a3a8c;
-            text-decoration: none;
-            font-size: 11px;
-        }
+        .keyword-url a { color: #1a3a8c; text-decoration: none; font-size: 11px; }
         .keyword-url a:hover { text-decoration: underline; }
-
-        /* Badges */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
         .badge-top3 { background: #d5f5e3; color: #1e8449; }
         .badge-top10 { background: #d5f4e6; color: #27ae60; }
         .badge-top20 { background: #fef5e7; color: #d68910; }
         .badge-below { background: #fadbd8; color: #cb4335; }
         .badge-new { background: #eaf2ff; color: #1a3a8c; }
-
-        /* Trend */
-        .trend { font-size: 16px; text-align: center; }
-
-        /* Editable inputs */
-        .num-input {
-            width: 64px;
-            padding: 6px 8px;
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 13px;
-            text-align: center;
-            transition: border-color 0.2s;
-        }
+        .num-input { width: 64px; padding: 6px 8px; border: 1px solid #e0e0e0; border-radius: 5px; font-size: 13px; text-align: center; transition: border-color 0.2s; }
         .num-input:focus { outline: none; border-color: #1a3a8c; box-shadow: 0 0 0 2px rgba(26,58,140,0.12); }
-
-        /* CTR & Conv% chips */
-        .pct-chip {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        .pct-hot { background: #d5f4e6; color: #27ae60; }
-        .pct-mid { background: #fef5e7; color: #d68910; }
-        .pct-low { background: #f4f4f4; color: #95a5a6; }
-
-        /* Form Section */
-        .form-section {
-            background: white;
-            padding: 22px;
-            border-radius: 10px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
+        .pct-chip { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+        .pct-hot { background: #d5f4e6; color: #27ae60; } .pct-mid { background: #fef5e7; color: #d68910; } .pct-low { background: #f4f4f4; color: #95a5a6; }
+        .form-section { background: white; padding: 22px; border-radius: 10px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
         .form-section h2 { font-size: 15px; margin-bottom: 16px; color: #2c3e50; font-weight: 700; }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 2fr 1.5fr 1fr 1fr auto;
-            gap: 12px;
-            align-items: flex-end;
-        }
+        .form-grid { display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr auto; gap: 12px; align-items: flex-end; }
         .form-group { display: flex; flex-direction: column; }
-        .form-group label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #7f8c8d;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-        .form-group input {
-            padding: 9px 12px;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 13px;
-            transition: border-color 0.2s;
-        }
-        .form-group input:focus { outline: none; border-color: #1a3a8c; box-shadow: 0 0 0 2px rgba(26,58,140,0.1); }
-
-        /* Alert */
-        .alert {
-            padding: 10px 14px;
-            border-radius: 6px;
-            margin-bottom: 14px;
-            font-size: 13px;
-            font-weight: 600;
-        }
+        .form-group label { font-size: 11px; font-weight: 700; color: #7f8c8d; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+        .form-group input { padding: 9px 12px; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 13px; transition: border-color 0.2s; }
+        .form-group input:focus { outline: none; border-color: #1a3a8c; }
+        .serp-panel { background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 24px; overflow: hidden; }
+        .serp-panel-header { padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border-bottom: 1px solid #f0f0f0; user-select: none; }
+        .serp-panel-header:hover { background: #fafbfc; }
+        .serp-panel-title { font-size: 14px; font-weight: 700; color: #2c3e50; }
+        .serp-panel-body { padding: 18px 20px; }
+        .serp-grid { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: flex-end; }
+        .usage-bar { height: 6px; background: #f0f0f0; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+        .usage-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        .usage-ok { background: #27ae60; } .usage-warn { background: #f39c12; } .usage-danger { background: #e74c3c; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+        .row-checking { background: #fdf6ff !important; }
+        .row-new { background: #fffef0 !important; }
+        .alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
         .alert-success { background: #d5f4e6; color: #1e8449; }
         .alert-info { background: #eaf2ff; color: #1a3a8c; }
         .alert-warning { background: #fef5e7; color: #d68910; }
-
-        /* Empty state */
+        .alert-error { background: #fadbd8; color: #cb4335; }
         .empty-state { text-align: center; padding: 40px 20px; color: #95a5a6; }
-
-        /* Footer */
         .footer { text-align: center; margin-top: 24px; color: #95a5a6; font-size: 12px; line-height: 1.8; }
-
-        /* Seed modal / panel */
-        .seed-panel {
-            background: #eaf2ff;
-            border: 1px solid #aecbf8;
-            border-radius: 10px;
-            padding: 18px 20px;
-            margin-bottom: 24px;
-        }
+        .seed-panel { background: #eaf2ff; border: 1px solid #aecbf8; border-radius: 10px; padding: 18px 20px; margin-bottom: 24px; }
         .seed-panel h3 { font-size: 15px; color: #1a3a8c; margin-bottom: 10px; }
         .seed-panel p { font-size: 13px; color: #2c3e50; margin-bottom: 14px; line-height: 1.6; }
         .seed-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
-        .seed-tag {
-            background: white;
-            border: 1px solid #aecbf8;
-            border-radius: 20px;
-            padding: 4px 12px;
-            font-size: 12px;
-            color: #1a3a8c;
-        }
-
-        /* Highlight moi */
-        .row-new { background: #fffef0 !important; }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .form-grid { grid-template-columns: 1fr 1fr; }
-            .metrics-grid { grid-template-columns: 1fr 1fr 1fr; }
-            .navbar { flex-direction: column; align-items: flex-start; }
-        }
+        .seed-tag { background: white; border: 1px solid #aecbf8; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #1a3a8c; }
+        .last-checked { font-size: 10px; color: #95a5a6; margin-top: 2px; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } .serp-grid { grid-template-columns: 1fr; } .metrics-grid { grid-template-columns: 1fr 1fr 1fr; } .navbar { flex-direction: column; align-items: flex-start; } }
     </style>
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
-const { useState, useEffect, useMemo } = React;
+const { useState, useEffect, useMemo, useRef } = React;
+
+const DEFAULT_SERP_KEY = "b1782251397cc52aaab7dc6b28e3d412944845d927d21a21b7f1ad6e23cf4c52";
+const SERP_QUOTA = 250;
+const TARGET_DOMAIN = "thutucxuatnhapkhau.com";
 
 const SEED_KEYWORDS = [
-  { slug: "thu-tuc-nhap-khau-may-dieu-hoa-2026",    name: "thu tuc nhap khau may dieu hoa 2026",      url: "https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-dieu-hoa-2026/",      targetRank: 5,  cluster: "thiet-bi-dien" },
-  { slug: "thu-tuc-nhap-khau-may-loc-khong-khi-2026",name: "thu tuc nhap khau may loc khong khi 2026", url: "https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-loc-khong-khi-2026/", targetRank: 5,  cluster: "thiet-bi-dien" },
-  { slug: "cach-xin-co-form-e",                      name: "cach xin C/O form E",                       url: "https://thutucxuatnhapkhau.com/cach-xin-co-form-e/",                       targetRank: 3,  cluster: "thu-tuc-xnk" },
-  { slug: "thu-tuc-nhap-khau-may-giat-2026",          name: "thu tuc nhap khau may giat 2026",           url: "https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-giat-2026/",          targetRank: 5,  cluster: "thiet-bi-dien" },
-  { slug: "thu-tuc-nhap-khau-thang-may-2026",         name: "thu tuc nhap khau thang may 2026",          url: "https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-thang-may-2026/",         targetRank: 5,  cluster: "thiet-bi-dien",  isNew: true },
-  { slug: "vot-typti-la-gi",                           name: "vot typti la gi",                           url: "https://thutucxuatnhapkhau.com/vot-typti-la-gi/",                           targetRank: 3,  cluster: "vot-typti",      isNew: true },
-  { slug: "thu-tuc-nhap-khau-vot-typti",               name: "thu tuc nhap khau vot typti",               url: "https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-vot-typti/",               targetRank: 5,  cluster: "vot-typti",      isNew: true },
-  { slug: "hs-code-vot-typti",                         name: "HS code vot typti 9506.51.00",               url: "https://thutucxuatnhapkhau.com/hs-code-vot-typti/",                         targetRank: 5,  cluster: "vot-typti",      isNew: true },
-  { slug: "hoa-don-nhap-khau-vot-typti",               name: "hoa don nhap khau vot typti",               url: "https://thutucxuatnhapkhau.com/hoa-don-nhap-khau-vot-typti/",               targetRank: 5,  cluster: "vot-typti",      isNew: true },
-  { slug: "nhap-si-vot-typti",                         name: "nhap si vot typti tu Trung Quoc",           url: "https://thutucxuatnhapkhau.com/nhap-si-vot-typti/",                         targetRank: 5,  cluster: "vot-typti",      isNew: true },
-  { slug: "vot-typti-vs-pickleball",                   name: "vot typti vs pickleball",                   url: "https://thutucxuatnhapkhau.com/vot-typti-vs-pickleball/",                   targetRank: 3,  cluster: "vot-typti",      isNew: true },
-  { slug: "thi-truong-vot-typti-du-bao",               name: "thi truong vot typti 2026-2028",             url: "https://thutucxuatnhapkhau.com/thi-truong-vot-typti-du-bao/",               targetRank: 5,  cluster: "vot-typti",      isNew: true },
-  { slug: "chuyen-tu-pickleball-sang-typti",           name: "chuyen tu pickleball sang typti",           url: "https://thutucxuatnhapkhau.com/chuyen-tu-pickleball-sang-typti/",           targetRank: 5,  cluster: "vot-typti",      isNew: true },
+  { slug:"thu-tuc-nhap-khau-may-dieu-hoa-2026",     name:"thu tuc nhap khau may dieu hoa 2026",      url:"https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-dieu-hoa-2026/",      targetRank:5, cluster:"thiet-bi-dien" },
+  { slug:"thu-tuc-nhap-khau-may-loc-khong-khi-2026",name:"thu tuc nhap khau may loc khong khi 2026", url:"https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-loc-khong-khi-2026/", targetRank:5, cluster:"thiet-bi-dien" },
+  { slug:"cach-xin-co-form-e",                       name:"cach xin C/O form E",                       url:"https://thutucxuatnhapkhau.com/cach-xin-co-form-e/",                       targetRank:3, cluster:"thu-tuc-xnk" },
+  { slug:"thu-tuc-nhap-khau-may-giat-2026",           name:"thu tuc nhap khau may giat 2026",           url:"https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-may-giat-2026/",          targetRank:5, cluster:"thiet-bi-dien" },
+  { slug:"thu-tuc-nhap-khau-thang-may-2026",          name:"thu tuc nhap khau thang may 2026",          url:"https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-thang-may-2026/",         targetRank:5, cluster:"thiet-bi-dien", isNew:true },
+  { slug:"vot-typti-la-gi",                            name:"vot typti la gi",                           url:"https://thutucxuatnhapkhau.com/vot-typti-la-gi/",                          targetRank:3, cluster:"vot-typti",     isNew:true },
+  { slug:"thu-tuc-nhap-khau-vot-typti",                name:"thu tuc nhap khau vot typti",               url:"https://thutucxuatnhapkhau.com/thu-tuc-nhap-khau-vot-typti/",              targetRank:5, cluster:"vot-typti",     isNew:true },
+  { slug:"hs-code-vot-typti",                          name:"HS code vot typti 9506.51.00",               url:"https://thutucxuatnhapkhau.com/hs-code-vot-typti/",                        targetRank:5, cluster:"vot-typti",     isNew:true },
+  { slug:"hoa-don-nhap-khau-vot-typti",                name:"hoa don nhap khau vot typti",               url:"https://thutucxuatnhapkhau.com/hoa-don-nhap-khau-vot-typti/",              targetRank:5, cluster:"vot-typti",     isNew:true },
+  { slug:"nhap-si-vot-typti",                          name:"nhap si vot typti tu Trung Quoc",           url:"https://thutucxuatnhapkhau.com/nhap-si-vot-typti/",                        targetRank:5, cluster:"vot-typti",     isNew:true },
+  { slug:"vot-typti-vs-pickleball",                    name:"vot typti vs pickleball",                   url:"https://thutucxuatnhapkhau.com/vot-typti-vs-pickleball/",                  targetRank:3, cluster:"vot-typti",     isNew:true },
+  { slug:"thi-truong-vot-typti-du-bao",                name:"thi truong vot typti 2026-2028",            url:"https://thutucxuatnhapkhau.com/thi-truong-vot-typti-du-bao/",              targetRank:5, cluster:"vot-typti",     isNew:true },
+  { slug:"chuyen-tu-pickleball-sang-typti",            name:"chuyen tu pickleball sang typti",           url:"https://thutucxuatnhapkhau.com/chuyen-tu-pickleball-sang-typti/",          targetRank:5, cluster:"vot-typti",     isNew:true },
 ];
 
-const CLUSTERS = {
-  all:              "Tat Ca",
-  "thiet-bi-dien":  "Thiet Bi Dien",
-  "thu-tuc-xnk":    "Thu Tuc XNK",
-  "vot-typti":      "Vot Typti (9 bai moi)",
-};
+const CLUSTERS = { all:"Tat Ca", "thiet-bi-dien":"Thiet Bi Dien", "thu-tuc-xnk":"Thu Tuc XNK", "vot-typti":"Vot Typti (9 bai moi)" };
 
 function makeSeedItem(s) {
-  return {
-    id: Date.now() + Math.random(),
-    slug: s.slug, name: s.name, url: s.url,
-    currentRank: 0, prevRank: null, targetRank: s.targetRank,
-    clicks: 0, impressions: 0, leads: 0,
-    cluster: s.cluster || "thu-tuc-xnk", isNew: s.isNew || false,
-    addedAt: new Date().toLocaleDateString("vi-VN"),
-    updatedAt: new Date().toLocaleDateString("vi-VN"),
-  };
+  return { id:Date.now()+Math.random(), slug:s.slug, name:s.name, url:s.url, currentRank:0, prevRank:null, targetRank:s.targetRank, clicks:0, impressions:0, leads:0, cluster:s.cluster||"thu-tuc-xnk", isNew:s.isNew||false, lastChecked:null, addedAt:new Date().toLocaleDateString("vi-VN"), updatedAt:new Date().toLocaleDateString("vi-VN") };
 }
 
-function getBadge(rank) {
-  if (!rank || rank === 0) return { cls: "badge-new",   label: "Moi/N/A" };
-  if (rank <= 3)           return { cls: "badge-top3",  label: "Top 3 (#" + rank + ")" };
-  if (rank <= 10)          return { cls: "badge-top10", label: "Top 10 (#" + rank + ")" };
-  if (rank <= 20)          return { cls: "badge-top20", label: "Top 20 (#" + rank + ")" };
-  return                          { cls: "badge-below", label: "#" + rank };
+function getBadge(r) {
+  if (!r||r===0) return {cls:"badge-new",label:"Moi/N/A"};
+  if (r>100) return {cls:"badge-below",label:">100"};
+  if (r<=3) return {cls:"badge-top3",label:"Top 3 (#"+r+")"};
+  if (r<=10) return {cls:"badge-top10",label:"Top 10 (#"+r+")"};
+  if (r<=20) return {cls:"badge-top20",label:"Top 20 (#"+r+")"};
+  return {cls:"badge-below",label:"#"+r};
 }
 
-function getTrend(cur, prev) {
-  if (!prev || !cur || cur === 0) return "-";
-  if (cur < prev) return "+" + (prev - cur);
-  if (cur > prev) return "-" + (cur - prev);
+function getTrend(c,p) {
+  if (!p||!c||c===0) return "-";
+  if (c<p) return "up+"+(p-c);
+  if (c>p) return "dn-"+(c-p);
   return "=";
 }
 
-function pct(a, b) {
-  if (!b || b === 0) return null;
-  return ((a / b) * 100).toFixed(1);
-}
+function pct(a,b) { if (!b||b===0) return null; return ((a/b)*100).toFixed(1); }
 
-function PctChip({ val }) {
-  if (val === null) return React.createElement("span", {className: "pct-chip pct-low"}, "-");
-  const n = parseFloat(val);
-  const cls = n >= 5 ? "pct-hot" : n >= 2 ? "pct-mid" : "pct-low";
-  return React.createElement("span", {className: "pct-chip " + cls}, val + "%");
+function PctChip({val}) {
+  if (val===null) return <span className="pct-chip pct-low">-</span>;
+  const n=parseFloat(val), cls=n>=5?"pct-hot":n>=2?"pct-mid":"pct-low";
+  return <span className={"pct-chip "+cls}>{val}%</span>;
 }
 
 function migrateV1(raw) {
-  return raw.map(item => ({
-    url: "", clicks: 0, impressions: 0, leads: 0,
-    cluster: "thu-tuc-xnk", isNew: false, slug: "", prevRank: null,
-    addedAt: item.createdAt || new Date().toLocaleDateString("vi-VN"),
-    ...item,
-  }));
+  return raw.map(item=>({url:"",clicks:0,impressions:0,leads:0,cluster:"thu-tuc-xnk",isNew:false,slug:"",prevRank:null,lastChecked:null,addedAt:item.createdAt||new Date().toLocaleDateString("vi-VN"),...item}));
 }
 
 function RankTracker() {
-  const [keywords, setKeywords] = useState([]);
-  const [activeTab, setActiveTab] = useState("all");
-  const [showAdd, setShowAdd] = useState(false);
-  const [showSeed, setShowSeed] = useState(false);
-  const [alert, setAlert] = useState(null);
-  const [form, setForm] = useState({name:"",url:"",rank:"",target:""});
+  const [keywords,setKeywords] = useState([]);
+  const [activeTab,setActiveTab] = useState("all");
+  const [showAdd,setShowAdd] = useState(false);
+  const [showSeed,setShowSeed] = useState(false);
+  const [showSerp,setShowSerp] = useState(false);
+  const [alert,setAlert] = useState(null);
+  const [checking,setChecking] = useState(new Set());
+  const [checkAllRunning,setCheckAllRunning] = useState(false);
+  const cancelRef = useRef(false);
+  const [serpKey,setSerpKey] = useState(()=>localStorage.getItem("oz_serp_key")||DEFAULT_SERP_KEY);
+  const [serpKeyInput,setSerpKeyInput] = useState("");
+  const [serpUsed,setSerpUsed] = useState(()=>parseInt(localStorage.getItem("oz_serp_used")||"0"));
+  const [form,setForm] = useState({name:"",url:"",rank:"",target:""});
 
-  useEffect(() => {
-    const raw = localStorage.getItem("oz_keywords_v2");
-    if (raw) { try { setKeywords(migrateV1(JSON.parse(raw))); } catch(e){} }
+  useEffect(()=>{
+    const raw=localStorage.getItem("oz_keywords_v2");
+    if (raw) { try{setKeywords(migrateV1(JSON.parse(raw)));}catch(e){} }
     else {
-      const old = localStorage.getItem("oz_keywords");
-      if (old) { try {
-        const m = migrateV1(JSON.parse(old)); setKeywords(m);
-        showAlertFn("info", "Da migrate " + m.length + " tu khoa tu v1 sang v2");
-      } catch(e){} }
+      const old=localStorage.getItem("oz_keywords");
+      if (old) { try{ const m=migrateV1(JSON.parse(old)); setKeywords(m); showAlertFn("info","Da migrate "+m.length+" tu khoa tu v1->v2"); }catch(e){} }
     }
-  }, []);
+  },[]);
 
-  useEffect(() => {
-    if (keywords.length > 0) localStorage.setItem("oz_keywords_v2", JSON.stringify(keywords));
-  }, [keywords]);
+  useEffect(()=>{ if(keywords.length>0) localStorage.setItem("oz_keywords_v2",JSON.stringify(keywords)); },[keywords]);
+  useEffect(()=>{ localStorage.setItem("oz_serp_used",String(serpUsed)); },[serpUsed]);
 
-  function showAlertFn(t, m, d=4000) { setAlert({type:t,msg:m}); setTimeout(()=>setAlert(null),d); }
+  function showAlertFn(t,m,d=4000) { setAlert({type:t,msg:m}); setTimeout(()=>setAlert(null),d); }
+
+  async function checkOneRank(id) {
+    const kw = keywords.find(k=>k.id===id);
+    if (!kw||!serpKey) return null;
+    if (serpUsed>=SERP_QUOTA) { showAlertFn("warning","Het "+SERP_QUOTA+" request free SerpAPI thang nay!"); return null; }
+    setChecking(prev=>new Set([...prev,id]));
+    try {
+      const params = new URLSearchParams({engine:"google",q:kw.name,location:"Vietnam",hl:"vi",gl:"vn",num:"100",api_key:serpKey});
+      const res = await fetch("https://serpapi.com/search.json?"+params);
+      if (!res.ok) { const e=await res.json().catch(()=>({})); throw new Error(e.error||"HTTP "+res.status); }
+      const data = await res.json();
+      setSerpUsed(p=>p+1);
+      const organic = data.organic_results||[];
+      let rank=101;
+      for (const r of organic) { if ((r.link||r.url||"").includes(TARGET_DOMAIN)) { rank=r.position; break; } }
+      const now=new Date().toLocaleString("vi-VN");
+      setKeywords(prev=>prev.map(k=>k.id!==id?k:{...k,prevRank:k.currentRank||null,currentRank:rank,lastChecked:now,updatedAt:new Date().toLocaleDateString("vi-VN")}));
+      return rank;
+    } catch(err) {
+      showAlertFn("error","Loi check '"+kw.name+"': "+err.message);
+      return null;
+    } finally {
+      setChecking(prev=>{ const n=new Set(prev); n.delete(id); return n; });
+    }
+  }
+
+  async function checkAllRanks() {
+    if (checkAllRunning) { cancelRef.current=true; return; }
+    if (!serpKey) { showAlertFn("warning","Chua co SerpAPI key!"); return; }
+    const rem=SERP_QUOTA-serpUsed;
+    if (rem<1) { showAlertFn("warning","Het "+SERP_QUOTA+" request free!"); return; }
+    const toCheck=keywords.filter(k=>k.slug);
+    cancelRef.current=false; setCheckAllRunning(true);
+    let checked=0,improved=0,dropped=0;
+    for (const kw of toCheck) {
+      if (cancelRef.current||serpUsed+checked>=SERP_QUOTA) break;
+      const old=kw.currentRank, nr=await checkOneRank(kw.id);
+      if (nr!==null) { checked++; if(old>0&&nr<old)improved++; if(old>0&&nr>old)dropped++; await new Promise(r=>setTimeout(r,800)); }
+    }
+    setCheckAllRunning(false);
+    if (!cancelRef.current) showAlertFn("success","Check xong "+checked+" tu khoa! Tang:"+improved+" Giam:"+dropped);
+    else showAlertFn("info","Dung sau "+checked+" tu khoa");
+  }
 
   function seedAll() {
-    setKeywords(prev => {
-      const ex = new Set(prev.map(k=>k.slug).filter(Boolean));
-      const toAdd = SEED_KEYWORDS.filter(s=>!ex.has(s.slug)).map(makeSeedItem);
-      if (toAdd.length === 0) { showAlertFn("info", "Tat ca bai da co roi."); return prev; }
-      showAlertFn("success", "Da them " + toAdd.length + " tu khoa moi!");
-      return [...prev, ...toAdd];
-    }); setShowSeed(false);
+    setKeywords(prev=>{ const ex=new Set(prev.map(k=>k.slug).filter(Boolean)); const toAdd=SEED_KEYWORDS.filter(s=>!ex.has(s.slug)).map(makeSeedItem); if(!toAdd.length){showAlertFn("info","Tat ca bai da co roi!");return prev;} showAlertFn("success","Da them "+toAdd.length+" tu khoa!"); return [...prev,...toAdd]; });
+    setShowSeed(false);
   }
 
   function addKeyword(e) {
-    e.preventDefault();
-    if (!form.name.trim() || !form.target) return;
-    const kw = {
-      id: Date.now(), slug: "", name: form.name.trim(), url: form.url.trim(),
-      currentRank: parseInt(form.rank)||0, prevRank: null,
-      targetRank: parseInt(form.target), clicks:0, impressions:0, leads:0,
-      cluster: "thu-tuc-xnk", isNew: false,
-      addedAt: new Date().toLocaleDateString("vi-VN"),
-      updatedAt: new Date().toLocaleDateString("vi-VN"),
-    };
-    setKeywords(p=>[...p,kw]);
-    setForm({name:"",url:"",rank:"",target:""});
-    showAlertFn("success", 'Them "' + kw.name + '"');
-    setShowAdd(false);
+    e.preventDefault(); if(!form.name.trim()||!form.target) return;
+    const kw={id:Date.now(),slug:"",name:form.name.trim(),url:form.url.trim(),currentRank:parseInt(form.rank)||0,prevRank:null,targetRank:parseInt(form.target),clicks:0,impressions:0,leads:0,cluster:"thu-tuc-xnk",isNew:false,lastChecked:null,addedAt:new Date().toLocaleDateString("vi-VN"),updatedAt:new Date().toLocaleDateString("vi-VN")};
+    setKeywords(p=>[...p,kw]); setForm({name:"",url:"",rank:"",target:""}); showAlertFn("success","Them '"+kw.name+"' thanh cong"); setShowAdd(false);
   }
 
-  function updateField(id, field, val) {
-    setKeywords(p=>p.map(kw=>{
-      if (kw.id !== id) return kw;
-      const u = {...kw, updatedAt: new Date().toLocaleDateString("vi-VN")};
-      if (field === "currentRank") { u.prevRank = kw.currentRank||null; u.currentRank = parseInt(val)||0; }
-      else { u[field] = parseInt(val)||0; }
-      return u;
-    }));
+  function updateField(id,field,val) {
+    setKeywords(p=>p.map(kw=>{ if(kw.id!==id)return kw; const u={...kw,updatedAt:new Date().toLocaleDateString("vi-VN")}; if(field==="currentRank"){u.prevRank=kw.currentRank||null;u.currentRank=parseInt(val)||0;}else{u[field]=parseInt(val)||0;} return u; }));
   }
 
-  function deleteKeyword(id) {
-    if (!confirm("Xoa tu khoa nay?")) return;
-    setKeywords(p=>p.filter(k=>k.id!==id));
-  }
+  function deleteKeyword(id) { if(!confirm("Xoa tu khoa nay?"))return; setKeywords(p=>p.filter(k=>k.id!==id)); }
 
   function exportCSV() {
-    const h = ["Tu khoa","URL","Rank","Target","Prev","Clicks","Impr","CTR%","Leads","Conv%","Cap nhat"];
-    const rows = keywords.map(k=>[k.name,k.url,k.currentRank,k.targetRank,k.prevRank||"",k.clicks,k.impressions,pct(k.clicks,k.impressions)||0,k.leads,pct(k.leads,k.clicks)||0,k.updatedAt]);
-    const csv = [h,...rows].map(r=>r.map(v=>'"'+v+'"').join(",")).join("\n");
-    const a = document.createElement("a");
-    a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
-    a.download = "oz-rank-" + new Date().toISOString().slice(0,10) + ".csv";
-    a.click();
+    const h=["Tu khoa","URL","Rank","Target","Prev","Clicks","Impr","CTR%","Leads","Conv%","Last Check","Cap nhat"];
+    const rows=keywords.map(k=>[k.name,k.url,k.currentRank,k.targetRank,k.prevRank||"",k.clicks,k.impressions,pct(k.clicks,k.impressions)||0,k.leads,pct(k.leads,k.clicks)||0,k.lastChecked||"",k.updatedAt]);
+    const csv=[h,...rows].map(r=>r.map(v=>'"'+v+'"').join(",")).join("\n");
+    const a=document.createElement("a"); a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv); a.download="oz-rank-"+new Date().toISOString().slice(0,10)+".csv"; a.click();
   }
 
-  const filtered = useMemo(()=> activeTab==="all"?keywords:keywords.filter(k=>k.cluster===activeTab),[keywords,activeTab]);
-  const m = useMemo(()=>({
-    total:keywords.length,
-    top3:keywords.filter(k=>k.currentRank>0&&k.currentRank<=3).length,
-    top10:keywords.filter(k=>k.currentRank>0&&k.currentRank<=10).length,
-    clicks:keywords.reduce((s,k)=>s+(k.clicks||0),0),
-    leads:keywords.reduce((s,k)=>s+(k.leads||0),0),
-    impr:keywords.reduce((s,k)=>s+(k.impressions||0),0),
-    newC:keywords.filter(k=>k.isNew).length,
-  }),[keywords]);
-  const avgCTR = m.impr>0?((m.clicks/m.impr)*100).toFixed(1):null;
-  const unseeded = SEED_KEYWORDS.filter(s=>!keywords.some(k=>k.slug===s.slug));
+  const filtered=useMemo(()=>activeTab==="all"?keywords:keywords.filter(k=>k.cluster===activeTab),[keywords,activeTab]);
+  const m=useMemo(()=>({total:keywords.length,top3:keywords.filter(k=>k.currentRank>0&&k.currentRank<=3).length,top10:keywords.filter(k=>k.currentRank>0&&k.currentRank<=10).length,clicks:keywords.reduce((s,k)=>s+(k.clicks||0),0),leads:keywords.reduce((s,k)=>s+(k.leads||0),0),impr:keywords.reduce((s,k)=>s+(k.impressions||0),0),newC:keywords.filter(k=>k.isNew).length}),[keywords]);
+  const avgCTR=m.impr>0?((m.clicks/m.impr)*100).toFixed(1):null;
+  const unseeded=SEED_KEYWORDS.filter(s=>!keywords.some(k=>k.slug===s.slug));
+  const serpRem=SERP_QUOTA-serpUsed;
+  const serpPct=Math.min(100,(serpUsed/SERP_QUOTA)*100);
+  const fillCls=serpPct<60?"usage-ok":serpPct<85?"usage-warn":"usage-danger";
 
   return (
     <div className="container">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>OZ Rank Tracker v2.0</h1>
-          <p>thutucxuatnhapkhau.com — rank + click + chuyen doi lead</p>
+          <h1>OZ Rank Tracker v2.1</h1>
+          <p>thutucxuatnhapkhau.com | Auto check rank Google qua SerpAPI | {serpRem}/{SERP_QUOTA} req con lai</p>
         </div>
         <div className="navbar-right">
-          {unseeded.length>0&&<button className="btn btn-white" onClick={()=>setShowSeed(true)}>Nap {unseeded.length} Bai Moi</button>}
+          {unseeded.length>0&&<button className="btn btn-white" onClick={()=>setShowSeed(true)}>Nap {unseeded.length} Bai</button>}
+          <button className="btn btn-white" style={{background:checkAllRunning?"#fadbd8":"white",color:checkAllRunning?"#c0392b":"#1a3a8c"}} onClick={checkAllRanks} disabled={!serpKey||(serpRem<1&&!checkAllRunning)}>
+            {checkAllRunning?"Dung Check":"Check All ("+serpRem+" req)"}
+          </button>
           <button className="btn btn-white" onClick={()=>setShowAdd(v=>!v)}>{showAdd?"Dong":"+ Them"}</button>
           <button className="btn btn-white" onClick={exportCSV}>CSV</button>
+          <button className="btn btn-white" onClick={()=>setShowSerp(v=>!v)}>SerpAPI</button>
         </div>
       </div>
 
       {alert&&<div className={"alert alert-"+alert.type}>{alert.msg}</div>}
 
+      {showSerp&&(
+        <div className="serp-panel">
+          <div className="serp-panel-header" onClick={()=>setShowSerp(false)}>
+            <span className="serp-panel-title">SerpAPI Settings — Auto check rank Google Vietnam</span>
+            <span style={{color:"#7f8c8d",fontSize:"12px"}}>Dong</span>
+          </div>
+          <div className="serp-panel-body">
+            <div className="serp-grid">
+              <div className="form-group">
+                <label>API Key (serpapi.com/manage-api-key)</label>
+                <input type="text" placeholder="API key..." defaultValue={serpKey} onChange={e=>setSerpKeyInput(e.target.value)} style={{fontFamily:"monospace",fontSize:"12px"}}/>
+              </div>
+              <button className="btn btn-primary" onClick={()=>{ const k=serpKeyInput.trim()||serpKey; setSerpKey(k); localStorage.setItem("oz_serp_key",k); showAlertFn("success","Da luu API key"); }}>Luu Key</button>
+              <button className="btn btn-warning" onClick={()=>{ if(confirm("Reset counter ve 0?")){ setSerpUsed(0); showAlertFn("success","Da reset"); } }}>Reset Counter</button>
+            </div>
+            <div style={{marginTop:"14px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:"13px",fontWeight:600,color:"#2c3e50"}}>
+                <span>Da dung: <strong>{serpUsed}</strong> / {SERP_QUOTA}</span>
+                <span style={{color:serpRem>50?"#27ae60":serpRem>20?"#f39c12":"#e74c3c"}}>Con lai: <strong>{serpRem}</strong> request</span>
+              </div>
+              <div className="usage-bar"><div className={"usage-fill "+fillCls} style={{width:serpPct+"%"}}></div></div>
+              <div style={{fontSize:"11px",color:"#95a5a6",marginTop:"6px"}}>
+                Check All = {keywords.length} req | Check 1 tu khoa = 1 req | Free plan: {SERP_QUOTA} req/thang | serpapi.com
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showSeed&&unseeded.length>0&&(
         <div className="seed-panel">
-          <h3>Nap Bai Viet Moi</h3>
-          <p>Tim thay <strong>{unseeded.length} bai chua co</strong> — incl. 9 bai Typti moi + Thang May. Rank = 0 cho den khi cap nhat.</p>
-          <div className="seed-list">
-            {unseeded.map(s=><span key={s.slug} className="seed-tag">{s.isNew?"[MOI] ":""}{s.name}</span>)}
-          </div>
+          <h3>Nap Bai Viet Vao Tracker</h3>
+          <p>Tim thay <strong>{unseeded.length} bai chua co</strong> trong tracker.</p>
+          <div className="seed-list">{unseeded.map(s=><span key={s.slug} className="seed-tag">{s.isNew?"[MOI] ":""}{s.name}</span>)}</div>
           <div style={{display:"flex",gap:"10px"}}>
-            <button className="btn btn-primary" onClick={seedAll}>Nap Tat Ca ({unseeded.length} bai)</button>
+            <button className="btn btn-primary" onClick={seedAll}>Nap Tat Ca ({unseeded.length})</button>
             <button className="btn btn-sm" style={{background:"#ecf0f1",color:"#7f8c8d"}} onClick={()=>setShowSeed(false)}>Huy</button>
           </div>
         </div>
@@ -491,7 +320,7 @@ function RankTracker() {
 
       {showAdd&&(
         <div className="form-section">
-          <h2>Them Tu Khoa Moi</h2>
+          <h2>Them Tu Khoa Thu Cong</h2>
           <form onSubmit={addKeyword}>
             <div className="form-grid">
               <div className="form-group"><label>Tu Khoa</label><input type="text" placeholder="nhap khau may 2026" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} required/></div>
@@ -509,7 +338,7 @@ function RankTracker() {
         <div className="metric-card green"><h3>Top 3</h3><div className="metric-value">{m.top3}</div><div className="metric-sub">tu khoa</div></div>
         <div className="metric-card orange"><h3>Top 10</h3><div className="metric-value">{m.top10}</div><div className="metric-sub">tu khoa</div></div>
         <div className="metric-card teal"><h3>Clicks/tuan</h3><div className="metric-value">{m.clicks.toLocaleString()}</div><div className="metric-sub">tu GSC</div></div>
-        <div className="metric-card purple"><h3>CTR Trung Binh</h3><div className="metric-value">{avgCTR!==null?avgCTR+"%":"—"}</div><div className="metric-sub">clicks/impr</div></div>
+        <div className="metric-card purple"><h3>CTR TB</h3><div className="metric-value">{avgCTR!==null?avgCTR+"%":"—"}</div><div className="metric-sub">clicks/impr</div></div>
         <div className="metric-card red"><h3>Leads/tuan</h3><div className="metric-value">{m.leads}</div><div className="metric-sub">form submits</div></div>
       </div>
 
@@ -524,59 +353,78 @@ function RankTracker() {
       <div className="table-section">
         <div className="table-header">
           <h2>{CLUSTERS[activeTab]} — {filtered.length} tu khoa</h2>
-          <div style={{fontSize:"12px",color:"#95a5a6"}}>Nhap rank vao o Rank Moi - tu dong tinh Trend. Cap nhat Clicks+Impr+Leads moi tuan tu GSC.</div>
+          <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+            <span style={{fontSize:"12px",color:"#95a5a6"}}>SerpAPI: {serpRem} req con</span>
+            <button className="btn btn-check btn-sm" disabled={serpRem<1}
+              onClick={()=>{
+                const ids=filtered.filter(k=>k.slug).map(k=>k.id);
+                if(!ids.length)return;
+                showAlertFn("info","Dang check "+ids.length+" tu khoa...");
+                (async()=>{ for(const id of ids){ if(serpUsed>=SERP_QUOTA)break; await checkOneRank(id); await new Promise(r=>setTimeout(r,800)); } showAlertFn("success","Check xong tab nay!"); })();
+              }}>Check Tab Nay</button>
+          </div>
         </div>
         <div className="table-wrap">
           {filtered.length===0?(
-            <div className="empty-state"><p>Chua co tu khoa nao.</p>
-              {unseeded.length>0&&<button className="btn btn-primary" style={{marginTop:"12px"}} onClick={()=>setShowSeed(true)}>Nap {unseeded.length} Bai Moi</button>}
+            <div className="empty-state">
+              <p>Chua co tu khoa nao.</p>
+              {unseeded.length>0&&<button className="btn btn-primary" style={{marginTop:"12px"}} onClick={()=>setShowSeed(true)}>Nap {unseeded.length} Bai</button>}
             </div>
           ):(
-            <table><thead><tr>
-              <th style={{minWidth:"200px"}}>Tu Khoa / URL</th>
-              <th>Rank</th><th>Target</th><th>Trend</th><th>Rank Moi</th>
-              <th>Clicks<br/><span style={{fontSize:"10px",fontWeight:400}}>GSC/tuan</span></th>
-              <th>Impr.<br/><span style={{fontSize:"10px",fontWeight:400}}>GSC/tuan</span></th>
-              <th>CTR%</th>
-              <th>Leads<br/><span style={{fontSize:"10px",fontWeight:400}}>/tuan</span></th>
-              <th>Conv%</th><th>Cap nhat</th><th>Xoa</th>
-            </tr></thead>
-            <tbody>
-              {filtered.map(kw=>{
-                const badge=getBadge(kw.currentRank), trend=getTrend(kw.currentRank,kw.prevRank);
-                const ctr=pct(kw.clicks,kw.impressions), conv=pct(kw.leads,kw.clicks);
-                return(
-                  <tr key={kw.id} className={kw.isNew?"row-new":""}>
-                    <td>
-                      <div className="keyword-name">
-                        {kw.isNew&&<span style={{fontSize:"10px",background:"#c0392b",color:"white",borderRadius:"3px",padding:"1px 5px",marginRight:"5px"}}>MOI</span>}
-                        {kw.name}
-                      </div>
-                      {kw.url&&<div className="keyword-url"><a href={kw.url} target="_blank" rel="noopener">{kw.url.replace("https://thutucxuatnhapkhau.com","")}</a></div>}
-                    </td>
-                    <td><span className={"badge "+badge.cls}>{badge.label}</span></td>
-                    <td style={{color:"#7f8c8d",fontWeight:600}}>#{kw.targetRank}</td>
-                    <td className="trend">{trend}</td>
-                    <td><input type="number" className="num-input" min="0" value={kw.currentRank} onChange={e=>updateField(kw.id,"currentRank",e.target.value)}/></td>
-                    <td><input type="number" className="num-input" min="0" value={kw.clicks} onChange={e=>updateField(kw.id,"clicks",e.target.value)}/></td>
-                    <td><input type="number" className="num-input" min="0" value={kw.impressions} onChange={e=>updateField(kw.id,"impressions",e.target.value)}/></td>
-                    <td><PctChip val={ctr}/></td>
-                    <td><input type="number" className="num-input" min="0" value={kw.leads} onChange={e=>updateField(kw.id,"leads",e.target.value)}/></td>
-                    <td><PctChip val={conv}/></td>
-                    <td style={{color:"#95a5a6",fontSize:"12px"}}>{kw.updatedAt}</td>
-                    <td><button className="btn btn-danger" onClick={()=>deleteKeyword(kw.id)}>X</button></td>
-                  </tr>
-                );
-              })}
-            </tbody></table>
+            <table>
+              <thead><tr>
+                <th style={{minWidth:"200px"}}>Tu Khoa / URL</th>
+                <th>Rank</th><th>Target</th><th>Trend</th>
+                <th>Rank Moi<br/><span style={{fontSize:"10px",fontWeight:400}}>(thu cong)</span></th>
+                <th>Clicks<br/><span style={{fontSize:"10px",fontWeight:400}}>GSC</span></th>
+                <th>Impr.<br/><span style={{fontSize:"10px",fontWeight:400}}>GSC</span></th>
+                <th>CTR%</th>
+                <th>Leads</th><th>Conv%</th>
+                <th>Check<br/><span style={{fontSize:"10px",fontWeight:400}}>Google</span></th>
+                <th>Xoa</th>
+              </tr></thead>
+              <tbody>
+                {filtered.map(kw=>{
+                  const badge=getBadge(kw.currentRank),trend=getTrend(kw.currentRank,kw.prevRank);
+                  const ctr=pct(kw.clicks,kw.impressions),conv=pct(kw.leads,kw.clicks);
+                  const isChk=checking.has(kw.id);
+                  return (
+                    <tr key={kw.id} className={isChk?"row-checking":kw.isNew?"row-new":""}>
+                      <td>
+                        <div className="keyword-name">
+                          {kw.isNew&&<span style={{fontSize:"10px",background:"#c0392b",color:"white",borderRadius:"3px",padding:"1px 5px",marginRight:"5px"}}>MOI</span>}
+                          {kw.name}
+                        </div>
+                        {kw.url&&<div className="keyword-url"><a href={kw.url} target="_blank" rel="noopener">{kw.url.replace("https://thutucxuatnhapkhau.com","")}</a></div>}
+                        {kw.lastChecked&&<div className="last-checked">checked: {kw.lastChecked}</div>}
+                      </td>
+                      <td><span className={"badge "+badge.cls}>{badge.label}</span></td>
+                      <td style={{color:"#7f8c8d",fontWeight:600}}>#{kw.targetRank}</td>
+                      <td style={{textAlign:"center",fontSize:"14px"}}>{trend}</td>
+                      <td><input type="number" className="num-input" min="0" value={kw.currentRank} onChange={e=>updateField(kw.id,"currentRank",e.target.value)}/></td>
+                      <td><input type="number" className="num-input" min="0" value={kw.clicks} onChange={e=>updateField(kw.id,"clicks",e.target.value)}/></td>
+                      <td><input type="number" className="num-input" min="0" value={kw.impressions} onChange={e=>updateField(kw.id,"impressions",e.target.value)}/></td>
+                      <td><PctChip val={ctr}/></td>
+                      <td><input type="number" className="num-input" min="0" value={kw.leads} onChange={e=>updateField(kw.id,"leads",e.target.value)}/></td>
+                      <td><PctChip val={conv}/></td>
+                      <td style={{textAlign:"center"}}>
+                        {isChk?<span className="spin" style={{fontSize:"18px"}}>⏳</span>:
+                          <button className="btn btn-check" onClick={()=>checkOneRank(kw.id)} disabled={!serpKey||serpRem<1} title={"Check rank cho: "+kw.name}>Check</button>}
+                      </td>
+                      <td><button className="btn btn-danger" onClick={()=>deleteKeyword(kw.id)}>X</button></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </div>
 
       <div className="footer">
-        <p>Du lieu luu auto trong localStorage.</p>
-        <p>Rank: check qua Google Search Console. Cap nhat moi tuan.</p>
-        <p>OZ Rank Tracker <strong>v2.0</strong> - thutucxuatnhapkhau.com | 2026-04-29</p>
+        <p>Du lieu luu auto trong localStorage — khong can dang nhap, khong mat khi refresh.</p>
+        <p>Rank tu dong check qua SerpAPI (Google Vietnam) — {serpRem}/{SERP_QUOTA} request con lai thang nay.</p>
+        <p>OZ Rank Tracker v2.1 — thutucxuatnhapkhau.com | 2026-04-29</p>
       </div>
     </div>
   );
