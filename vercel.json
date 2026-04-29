@@ -1,1 +1,14 @@
-ewogICJjbGVhblVybHMiOiB0cnVlLAogICJ0cmFpbGluZ1NsYXNoIjogZmFsc2UsCiAgImhlYWRlcnMiOiBbCiAgICB7CiAgICAgICJzb3VyY2UiOiAiLyguKikiLAogICAgICAiaGVhZGVycyI6IFsKICAgICAgICB7ICJrZXkiOiAiQ2FjaGUtQ29udHJvbCIsICJ2YWx1ZSI6ICJwdWJsaWMsIG1heC1hZ2U9MzAwLCBtdXN0LXJldmFsaWRhdGUiIH0sCiAgICAgICAgeyAia2V5IjogIlgtQ29udGVudC1UeXBlLU9wdGlvbnMiLCAidmFsdWUiOiAibm9zbmlmZiIgfSwKICAgICAgICB7ICJrZXkiOiAiWC1GcmFtZS1PcHRpb25zIiwgInZhbHVlIjogIlNBTUVPUklHSU4iIH0KICAgICAgXQogICAgfQogIF0sCiAgIl92ZXJzaW9uIjogInYyLjAtMjAyNjA0MjkiCn0K
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=300, must-revalidate" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    }
+  ]
+}
