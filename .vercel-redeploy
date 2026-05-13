@@ -1,0 +1,1 @@
+redeploy trigger: 2026-05-13 — force Vercel to pick up latest commit (97211a6 v2.1) instead of stuck on ffe624b which served base64-encoded index.html
