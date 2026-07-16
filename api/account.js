@@ -1,5 +1,8 @@
+import { requireAuth } from '../lib/auth.js';
+
 // GET /api/account -> real SerpAPI quota for the configured account.
 export default async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   const key = process.env.SERP_API_KEY;
   if (!key) return res.status(200).json({ configured: false });
   try {
