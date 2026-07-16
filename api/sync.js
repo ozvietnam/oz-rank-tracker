@@ -1,9 +1,12 @@
 import { getClient } from '../lib/supabase.js';
+import { requireAuth } from '../lib/auth.js';
 
 // GET  /api/sync          -> { enabled, keywords: [...] }
 // POST /api/sync { keywords, deletedIds } -> upsert + delete
 // Each keyword is stored as a JSONB blob keyed by its id (schema-light).
+// POST chi upsert cac keyword duoc gui len (client gui phan da sua, khong gui ca mang).
 export default async function handler(req, res) {
+  if (!requireAuth(req, res)) return;
   const sb = getClient();
   if (!sb) return res.status(200).json({ enabled: false, keywords: [] });
 

@@ -6,6 +6,9 @@
   "crons": [
     { "path": "/api/cron-check", "schedule": "0 1 * * *" }
   ],
+  "functions": {
+    "api/cron-check.js": { "maxDuration": 60 }
+  },
   "headers": [
     {
       "source": "/(.*)",

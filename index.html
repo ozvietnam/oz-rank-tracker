@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OZ Rank Tracker v3.0 - Theo Doi Tu Khoa & Chuyen Doi</title>
+    <title>OZ Rank Tracker v3.1 - Theo Doi Tu Khoa & Chuyen Doi</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; padding: 20px; }
@@ -91,7 +91,15 @@
         .sync-cloud { background: rgba(255,255,255,0.22); color: #fff; }
         .sync-local { background: rgba(255,255,255,0.12); color: #ffe8d6; }
         .spark-cell svg { display: block; }
-        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } .metrics-grid { grid-template-columns: 1fr 1fr 1fr; } .navbar { flex-direction: column; align-items: flex-start; } }
+        .star { cursor: pointer; margin-right: 5px; font-size: 13px; user-select: none; }
+        .gsc-pos { font-size: 10px; color: #8e44ad; margin-left: 6px; }
+        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .report-full { grid-column: 1 / -1; }
+        .report-block h4 { font-size: 12px; text-transform: uppercase; color: #7f8c8d; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .dist-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 12px; }
+        .dist-bar { height: 10px; border-radius: 5px; }
+        .mover { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; padding: 4px 0; border-bottom: 1px dashed #f0f0f0; }
+        @media (max-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } .metrics-grid { grid-template-columns: 1fr 1fr 1fr; } .navbar { flex-direction: column; align-items: flex-start; } .report-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>

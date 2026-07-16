@@ -38,6 +38,7 @@ export function makeSeedItem(s) {
     currentRank: 0, prevRank: null, targetRank: s.targetRank,
     clicks: 0, impressions: 0, leads: 0,
     cluster: s.cluster || 'thu-tuc-xnk', isNew: s.isNew || false,
+    priority: false, gscPosition: null,
     lastChecked: null, history: [], addedAt: todayVN(), updatedAt: todayVN(),
   };
 }
@@ -77,8 +78,64 @@ export function migrate(raw) {
   return raw.map((item) => ({
     url: '', clicks: 0, impressions: 0, leads: 0, cluster: 'thu-tuc-xnk',
     isNew: false, slug: '', prevRank: null, lastChecked: null, history: [],
+    priority: false, gscPosition: null,
     addedAt: item.createdAt || todayVN(), updatedAt: todayVN(),
     ...item,
     history: Array.isArray(item.history) ? item.history : [],
   }));
+}
+
+// CSV field escaping (dau nhay kep nhan doi theo RFC 4180).
+export function escCSV(v) {
+  return '"' + String(v ?? '').replace(/"/g, '""') + '"';
+}
+
+// Bien dong rank lon nhat trong `days` ngay gan nhat (delta duong = len hang).
+export function topMovers(keywords, days = 7, todayISO = isoDay()) {
+  const cutoff = new Date(Date.parse(todayISO) - days * 86400000).toISOString().slice(0, 10);
+  const movers = [];
+  for (const k of keywords) {
+    const pts = (k.history || []).filter((p) => p && p.rank > 0);
+    if (pts.length < 2) continue;
+    const last = pts[pts.length - 1];
+    // moc so sanh: diem cuoi cung truoc/den cutoff, khong co thi lay diem cu nhat
+    let base = null;
+    for (const p of pts) { if (p.date <= cutoff) base = p; else break; }
+    if (!base) base = pts[0];
+    if (base === last) continue;
+    const delta = base.rank - last.rank;
+    if (delta !== 0) movers.push({ id: k.id, name: k.name, from: base.rank, to: last.rank, delta });
+  }
+  return movers.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
+
+// Chuoi rank trung binh theo ngay trong `days` ngay gan nhat.
+// Moi tu khoa carry-forward rank cuoi cung da biet; rank >100 (khong tim thay)
+// bi loai khoi trung binh.
+export function rankSeries(keywords, days = 30, todayISO = isoDay()) {
+  const end = Date.parse(todayISO);
+  const startISO = new Date(end - (days - 1) * 86400000).toISOString().slice(0, 10);
+  const maps = keywords.map((k) => {
+    const m = new Map();
+    for (const p of k.history || []) if (p && p.rank > 0) m.set(p.date, p.rank);
+    return m;
+  });
+  const lastKnown = new Array(keywords.length).fill(null);
+  keywords.forEach((k, i) => {
+    for (const p of k.history || []) {
+      if (p && p.rank > 0 && p.date < startISO) lastKnown[i] = p.rank;
+    }
+  });
+  const series = [];
+  for (let d = days - 1; d >= 0; d--) {
+    const date = new Date(end - d * 86400000).toISOString().slice(0, 10);
+    let sum = 0, n = 0, top10 = 0;
+    maps.forEach((m, i) => {
+      if (m.has(date)) lastKnown[i] = m.get(date);
+      const r = lastKnown[i];
+      if (r != null && r <= 100) { sum += r; n++; if (r <= 10) top10++; }
+    });
+    series.push({ date, avg: n ? Math.round((sum / n) * 10) / 10 : null, tracked: n, top10 });
+  }
+  return series;
 }

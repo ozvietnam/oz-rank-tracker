@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   SEED_KEYWORDS, CLUSTERS, makeSeedItem, getBadge, getTrend, pct,
-  pushHistory, migrate, newId,
+  pushHistory, migrate, newId, escCSV,
 } from './lib/helpers.js';
 import * as api from './lib/api.js';
 import Sparkline from './components/Sparkline.jsx';
+import Report from './components/Report.jsx';
 
 const SERP_QUOTA_FALLBACK = 250;
 const LS_KEY = 'oz_keywords_v2';
@@ -22,6 +23,7 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [showSeed, setShowSeed] = useState(false);
   const [showSerp, setShowSerp] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [alert, setAlert] = useState(null);
   const [checking, setChecking] = useState(new Set());
   const [checkAllRunning, setCheckAllRunning] = useState(false);
@@ -32,6 +34,8 @@ export default function App() {
   const [cloud, setCloud] = useState({ enabled: false, loaded: false });
   const deletedRef = useRef([]);
   const dirtyRef = useRef(false);
+  // Chi push nhung keyword da sua (theo id) — tranh ghi de chinh sua tu may khac.
+  const dirtyIdsRef = useRef(new Set());
 
   // SerpAPI account/quota (real, from server)
   const [acct, setAcct] = useState({ configured: false, remaining: null, used: 0, total: SERP_QUOTA_FALLBACK });
@@ -50,6 +54,11 @@ export default function App() {
 
     (async () => {
       const res = await api.loadCloud();
+      if (res.authRequired) {
+        setCloud({ enabled: false, loaded: true });
+        showAlertFn('warning', 'Server yeu cau APP_TOKEN — bam nut 🔑 de nhap token.', 8000);
+        return;
+      }
       if (res.enabled) {
         if (res.keywords && res.keywords.length) {
           setKeywords(migrate(res.keywords));
@@ -69,27 +78,56 @@ export default function App() {
     if (keywords.length > 0) localStorage.setItem(LS_KEY, JSON.stringify(keywords));
   }, [keywords]);
 
-  // ---- Debounced push to cloud after local edits ----
+  // ---- Debounced push to cloud after local edits (chi gui keyword da sua) ----
   useEffect(() => {
     if (!cloud.enabled || !cloud.loaded) return;
     if (!dirtyRef.current) return;
     const t = setTimeout(async () => {
       const del = deletedRef.current;
+      const ids = dirtyIdsRef.current;
       deletedRef.current = [];
+      dirtyIdsRef.current = new Set();
       dirtyRef.current = false;
-      await api.saveCloud(keywords, del);
+      const changed = keywords.filter((k) => ids.has(k.id));
+      if (!changed.length && !del.length) return;
+      const res = await api.saveCloud(changed, del);
+      if (res && (res.authRequired || res.error)) {
+        // giu lai batch de push lai sau
+        del.forEach((d) => deletedRef.current.push(d));
+        ids.forEach((id) => dirtyIdsRef.current.add(id));
+        dirtyRef.current = true;
+        if (res.authRequired) showAlertFn('warning', 'Server yeu cau APP_TOKEN — bam nut 🔑 de nhap token.');
+      }
     }, 1200);
     return () => clearTimeout(t);
   }, [keywords, cloud]);
 
-  // Mutate keywords AND mark the set dirty so it gets pushed to the cloud.
-  function commit(updater) {
+  // Mutate keywords AND mark the touched ids dirty so they get pushed to the cloud.
+  function commit(updater, ids = []) {
+    ids.forEach((id) => dirtyIdsRef.current.add(id));
     dirtyRef.current = true;
     setKeywords(updater);
   }
 
   function refreshQuota() {
     api.getAccount().then((a) => { if (a && a.configured) setAcct({ ...a, configured: true }); });
+  }
+
+  function configureToken() {
+    const t = window.prompt('Nhap APP_TOKEN cua server (de trong de xoa token):', api.getToken());
+    if (t === null) return;
+    api.setToken(t.trim());
+    if (!t.trim()) { showAlertFn('info', 'Da xoa token.'); return; }
+    showAlertFn('info', 'Da luu token — dang tai lai du lieu...');
+    api.loadCloud().then((res) => {
+      if (res.authRequired) { showAlertFn('error', 'Token sai — server tu choi.'); return; }
+      if (res.enabled) {
+        if (res.keywords && res.keywords.length) setKeywords(migrate(res.keywords));
+        setCloud({ enabled: true, loaded: true });
+        showAlertFn('success', 'Dong bo cloud OK.');
+      }
+    });
+    refreshQuota();
   }
 
   async function checkOneRank(id) {
@@ -108,11 +146,16 @@ export default function App() {
         lastChecked: now,
         history: pushHistory(k.history, rank),
         updatedAt: new Date().toLocaleDateString('vi-VN'),
-      }));
+      }), [id]);
       refreshQuota();
       return rank;
     } catch (err) {
-      showAlertFn('error', "Loi check '" + kw.name + "': " + err.message);
+      if (err.status === 401) {
+        showAlertFn('error', 'Server yeu cau APP_TOKEN — bam nut 🔑 de nhap token.');
+        cancelRef.current = true; // dung Check All neu dang chay
+      } else {
+        showAlertFn('error', "Loi check '" + kw.name + "': " + err.message);
+      }
       return null;
     } finally {
       setChecking((prev) => { const n = new Set(prev); n.delete(id); return n; });
@@ -149,27 +192,31 @@ export default function App() {
       if (!res.enabled) { showAlertFn('warning', 'GSC chua duoc cau hinh (xem README).'); return; }
       const rows = res.rows || [];
       const byQuery = new Map(rows.map((r) => [String(r.query).toLowerCase(), r]));
-      let matched = 0;
+      const matchedIds = keywords.filter((k) => byQuery.has(String(k.name).toLowerCase())).map((k) => k.id);
       commit((prev) => prev.map((k) => {
         const hit = byQuery.get(String(k.name).toLowerCase());
         if (!hit) return k;
-        matched++;
-        return { ...k, clicks: Math.round(hit.clicks || 0), impressions: Math.round(hit.impressions || 0), updatedAt: new Date().toLocaleDateString('vi-VN') };
-      }));
-      showAlertFn('success', 'GSC: cap nhat ' + matched + '/' + rows.length + ' tu khoa khop.');
+        return {
+          ...k,
+          clicks: Math.round(hit.clicks || 0),
+          impressions: Math.round(hit.impressions || 0),
+          gscPosition: hit.position ? Math.round(hit.position * 10) / 10 : null,
+          updatedAt: new Date().toLocaleDateString('vi-VN'),
+        };
+      }), matchedIds);
+      showAlertFn('success', 'GSC: cap nhat ' + matchedIds.length + '/' + rows.length + ' tu khoa khop.');
     } catch (e) {
-      showAlertFn('error', 'Loi GSC: ' + e.message);
+      if (e.status === 401) showAlertFn('error', 'Server yeu cau APP_TOKEN — bam nut 🔑 de nhap token.');
+      else showAlertFn('error', 'Loi GSC: ' + e.message);
     }
   }
 
   function seedAll() {
-    commit((prev) => {
-      const ex = new Set(prev.map((k) => k.slug).filter(Boolean));
-      const toAdd = SEED_KEYWORDS.filter((s) => !ex.has(s.slug)).map(makeSeedItem);
-      if (!toAdd.length) { showAlertFn('info', 'Tat ca bai da co roi!'); return prev; }
-      showAlertFn('success', 'Da them ' + toAdd.length + ' tu khoa!');
-      return [...prev, ...toAdd];
-    });
+    const ex = new Set(keywords.map((k) => k.slug).filter(Boolean));
+    const toAdd = SEED_KEYWORDS.filter((s) => !ex.has(s.slug)).map(makeSeedItem);
+    if (!toAdd.length) { showAlertFn('info', 'Tat ca bai da co roi!'); setShowSeed(false); return; }
+    commit((prev) => [...prev, ...toAdd], toAdd.map((k) => k.id));
+    showAlertFn('success', 'Da them ' + toAdd.length + ' tu khoa!');
     setShowSeed(false);
   }
 
@@ -180,9 +227,10 @@ export default function App() {
       id: newId(), slug: '', name: form.name.trim(), url: form.url.trim(),
       currentRank: parseInt(form.rank) || 0, prevRank: null, targetRank: parseInt(form.target),
       clicks: 0, impressions: 0, leads: 0, cluster: 'thu-tuc-xnk', isNew: false,
+      priority: false, gscPosition: null,
       lastChecked: null, history: [], addedAt: new Date().toLocaleDateString('vi-VN'), updatedAt: new Date().toLocaleDateString('vi-VN'),
     };
-    commit((p) => [...p, kw]);
+    commit((p) => [...p, kw], [kw.id]);
     setForm({ name: '', url: '', rank: '', target: '' });
     showAlertFn('success', "Them '" + kw.name + "' thanh cong");
     setShowAdd(false);
@@ -200,7 +248,11 @@ export default function App() {
         u[field] = parseInt(val) || 0;
       }
       return u;
-    }));
+    }), [id]);
+  }
+
+  function togglePriority(id) {
+    commit((p) => p.map((kw) => kw.id !== id ? kw : { ...kw, priority: !kw.priority }), [id]);
   }
 
   function deleteKeyword(id) {
@@ -210,9 +262,13 @@ export default function App() {
   }
 
   function exportCSV() {
-    const h = ['Tu khoa', 'URL', 'Rank', 'Target', 'Prev', 'Clicks', 'Impr', 'CTR%', 'Leads', 'Conv%', 'Last Check', 'Cap nhat'];
-    const rows = keywords.map((k) => [k.name, k.url, k.currentRank, k.targetRank, k.prevRank || '', k.clicks, k.impressions, pct(k.clicks, k.impressions) || 0, k.leads, pct(k.leads, k.clicks) || 0, k.lastChecked || '', k.updatedAt]);
-    const csv = [h, ...rows].map((r) => r.map((v) => '"' + v + '"').join(',')).join('\n');
+    const h = ['Tu khoa', 'URL', 'Uu tien', 'Rank', 'Target', 'Prev', 'GSC Pos', 'Clicks', 'Impr', 'CTR%', 'Leads', 'Conv%', 'Last Check', 'Cap nhat'];
+    const rows = keywords.map((k) => [
+      k.name, k.url, k.priority ? 'x' : '', k.currentRank, k.targetRank, k.prevRank || '',
+      k.gscPosition != null ? k.gscPosition : '', k.clicks, k.impressions,
+      pct(k.clicks, k.impressions) || 0, k.leads, pct(k.leads, k.clicks) || 0, k.lastChecked || '', k.updatedAt,
+    ]);
+    const csv = [h, ...rows].map((r) => r.map(escCSV).join(',')).join('\n');
     const a = document.createElement('a');
     a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     a.download = 'oz-rank-' + new Date().toISOString().slice(0, 10) + '.csv';
@@ -239,7 +295,7 @@ export default function App() {
     <div className="container">
       <div className="navbar">
         <div className="navbar-left">
-          <h1>OZ Rank Tracker v3.0</h1>
+          <h1>OZ Rank Tracker v3.1</h1>
           <p>thutucxuatnhapkhau.com | Auto check rank Google qua SerpAPI (server-side) | {remLabel}/{serpTotal} req con lai</p>
         </div>
         <div className="navbar-right">
@@ -251,13 +307,17 @@ export default function App() {
             {checkAllRunning ? 'Dung Check' : 'Check All'}
           </button>
           <button className="btn btn-white" onClick={syncGSC}>Sync GSC</button>
+          <button className="btn btn-white" onClick={() => setShowReport((v) => !v)}>{showReport ? 'Dong BC' : 'Bao Cao'}</button>
           <button className="btn btn-white" onClick={() => setShowAdd((v) => !v)}>{showAdd ? 'Dong' : '+ Them'}</button>
           <button className="btn btn-white" onClick={exportCSV}>CSV</button>
           <button className="btn btn-white" onClick={() => setShowSerp((v) => !v)}>SerpAPI</button>
+          <button className="btn btn-white" title="Nhap APP_TOKEN de dung API khi server bat bao mat" onClick={configureToken}>🔑</button>
         </div>
       </div>
 
       {alert && <div className={'alert alert-' + alert.type}>{alert.msg}</div>}
+
+      {showReport && <Report keywords={keywords} onClose={() => setShowReport(false)} />}
 
       {showSerp && (
         <div className="serp-panel">
@@ -279,6 +339,7 @@ export default function App() {
                 <div className="usage-bar"><div className={'usage-fill ' + fillCls} style={{ width: serpPct + '%' }}></div></div>
                 <div style={{ fontSize: '11px', color: '#95a5a6', marginTop: '6px' }}>
                   Check All = {keywords.length} req | Check 1 tu khoa = 1 req | Quota lay truc tiep tu tai khoan SerpAPI.
+                  Cron chi check tu khoa ⭐ hang ngay, con lai moi vai ngay (CHECK_INTERVAL_DAYS) de tiet kiem quota.
                   <button className="btn btn-sm btn-white" style={{ marginLeft: '10px', border: '1px solid #e0e0e0' }} onClick={refreshQuota}>Lam moi quota</button>
                 </div>
               </>
@@ -374,11 +435,15 @@ export default function App() {
                     <tr key={kw.id} className={isChk ? 'row-checking' : kw.isNew ? 'row-new' : ''}>
                       <td>
                         <div className="keyword-name">
+                          <span className="star" title={kw.priority ? 'Uu tien: cron check hang ngay (bam de bo)' : 'Bam de uu tien: cron check hang ngay'} onClick={() => togglePriority(kw.id)}>{kw.priority ? '⭐' : '☆'}</span>
                           {kw.isNew && <span style={{ fontSize: '10px', background: '#c0392b', color: 'white', borderRadius: '3px', padding: '1px 5px', marginRight: '5px' }}>MOI</span>}
                           {kw.name}
                         </div>
                         {kw.url && <div className="keyword-url"><a href={kw.url} target="_blank" rel="noopener">{kw.url.replace('https://thutucxuatnhapkhau.com', '')}</a></div>}
-                        {kw.lastChecked && <div className="last-checked">checked: {kw.lastChecked}</div>}
+                        <div className="last-checked">
+                          {kw.lastChecked && <>checked: {kw.lastChecked}</>}
+                          {kw.gscPosition != null && <span className="gsc-pos">GSC pos: {kw.gscPosition}</span>}
+                        </div>
                       </td>
                       <td><span className={'badge ' + badge.cls}>{badge.label}</span></td>
                       <td style={{ color: '#7f8c8d', fontWeight: 600 }}>#{kw.targetRank}</td>
@@ -407,7 +472,7 @@ export default function App() {
       <div className="footer">
         <p>Du lieu luu localStorage (offline cache){cloud.enabled ? ' + dong bo cloud Supabase (da thiet bi)' : ''}.</p>
         <p>Rank check qua SerpAPI server-side (Google Vietnam){acct.configured ? ' — ' + serpRem + '/' + serpTotal + ' request con lai' : ' — chua cau hinh key'}.</p>
-        <p>OZ Rank Tracker v3.0 — thutucxuatnhapkhau.com</p>
+        <p>OZ Rank Tracker v3.1 — thutucxuatnhapkhau.com</p>
       </div>
     </div>
   );
